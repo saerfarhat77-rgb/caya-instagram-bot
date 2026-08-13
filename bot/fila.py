@@ -27,6 +27,11 @@ FUSO_BRASILIA = timezone(timedelta(hours=-3))
 IMAGENS = {".jpg", ".jpeg", ".png"}
 VIDEOS = {".mp4", ".mov"}
 
+# Limites da API do Instagram. Conferidos na leitura da fila para o erro
+# aparecer no --agenda, e nao so na hora de publicar.
+MAX_IMAGEM_MB = 8
+MAX_VIDEO_MB = 300
+
 # 2026-08-17-1200_2-story.jpg -> data, hora, indice do carrossel, sufixo story
 PADRAO = re.compile(
     r"^(?P<data>\d{4}-\d{2}-\d{2})-(?P<hora>\d{4})"
@@ -129,6 +134,15 @@ def ler_fila(pasta: Path) -> tuple[list[Post], list[str]]:
         chave = (quando, e_story)
         if ext == ".txt":
             legendas[chave] = arquivo
+            continue
+
+        limite = MAX_VIDEO_MB if ext in VIDEOS else MAX_IMAGEM_MB
+        tamanho_mb = arquivo.stat().st_size / (1024 * 1024)
+        if tamanho_mb > limite:
+            problemas.append(
+                f"{arquivo.name}: {tamanho_mb:.1f} MB, acima do limite de "
+                f"{limite} MB do Instagram"
+            )
             continue
 
         vagas = grupos.setdefault(chave, {})
