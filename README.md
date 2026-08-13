@@ -33,12 +33,50 @@ me fala que troco a frequencia do agendador.
 Depois de publicar, os arquivos vao para `publicados/AAAA-MM/`. Se um post
 falhar, ele **fica na fila** e tenta de novo na hora seguinte.
 
+## Acompanhamento de desempenho
+
+Depois de publicar, o robo acompanha o post e avisa no WhatsApp em cada marco:
+
+**1h, 3h, 6h, 12h, 24h, 2 dias, 3 dias, 7 dias e 14 dias.**
+
+Story tem vida curta e a API so devolve metrica nas primeiras 24h, entao usa
+marcos proprios: 1h, 6h e 20h.
+
+Cada aviso compara com a media dos posts anteriores do mesmo tipo e no mesmo
+marco — numero solto nao diz se foi bem:
+
+```
+Post de 13/08 13:00 (feed)
+Balanco de 3h:
+
+- alcance: 420  (40% acima da media)
+- curtidas: 55  (83% acima da media)
+- comentarios: 7  (133% acima da media)
+- salvamentos: 12  (140% acima da media)
+- compartilhamentos: 4  (100% acima da media)
+- visitas ao perfil: 15  (88% acima da media)
+
+Engajamento: 18.6% de quem viu interagiu
+```
+
+Toda leitura vira uma linha em `dados/metricas.csv`, que abre no Excel. O
+`dados/acompanhamento.json` guarda quais marcos ja foram lidos.
+
+**Sao 9 mensagens por post.** Com 3 posts por semana, passa de 25 avisos
+semanais. Para receber menos, apague marcos da lista `MARCOS` em
+[bot/metricas.py](bot/metricas.py) — o resto se ajusta sozinho.
+
 ## Comandos
 
 ```bash
-python -m bot.postar --agenda     # ver a fila inteira e o que esta vencido
-python -m bot.postar --simular    # ensaio: mostra o que faria, sem publicar
-python -m bot.postar              # publica de verdade o que venceu
+python -m bot.postar --agenda      # ver a fila e o que esta vencido
+python -m bot.postar --simular     # ensaio: mostra o que faria, sem publicar
+python -m bot.postar               # publica de verdade o que venceu
+
+python -m bot.acompanhar --resumo  # posts em acompanhamento e proximos marcos
+python -m bot.acompanhar           # le os marcos vencidos e avisa
+
+python -m bot.conferir             # testa token, Pages e WhatsApp sem publicar
 ```
 
 ---

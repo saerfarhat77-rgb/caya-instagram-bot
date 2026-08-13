@@ -47,15 +47,29 @@ jobs:
             python -m bot.postar
           fi
 
-      - name: Arquivar os posts publicados
+      # Roda mesmo se a publicacao falhar: posts antigos seguem em
+      # acompanhamento independentemente do que acontece com a fila de hoje.
+      - name: Acompanhar o desempenho dos posts
+        if: ${{ always() && inputs.simular != true }}
+        env:
+          IG_CONTA_ID: ${{ secrets.IG_CONTA_ID }}
+          IG_TOKEN: ${{ secrets.IG_TOKEN }}
+          WHATSAPP_PHONE_ID: ${{ secrets.WHATSAPP_PHONE_ID }}
+          WHATSAPP_TOKEN: ${{ secrets.WHATSAPP_TOKEN }}
+          WHATSAPP_DESTINO: ${{ secrets.WHATSAPP_DESTINO }}
+          CALLMEBOT_PHONE: ${{ secrets.CALLMEBOT_PHONE }}
+          CALLMEBOT_APIKEY: ${{ secrets.CALLMEBOT_APIKEY }}
+        run: python -m bot.acompanhar
+
+      - name: Arquivar publicados e salvar metricas
         if: ${{ always() && inputs.simular != true }}
         run: |
           if [ -n "$(git status --porcelain)" ]; then
             git config user.name "robo-caya"
             git config user.email "actions@github.com"
-            git add -A fila publicados
-            git commit -m "Arquiva posts publicados em $(date -u +%Y-%m-%d\ %H:%M) UTC"
+            git add -A fila publicados dados
+            git commit -m "Atualiza fila e metricas em $(date -u +%Y-%m-%d\ %H:%M) UTC"
             git push
           else
-            echo "Nada mudou na fila."
+            echo "Nada mudou."
           fi

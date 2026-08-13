@@ -20,13 +20,14 @@ import urllib.parse
 from datetime import datetime
 from pathlib import Path
 
-from bot import whatsapp
+from bot import acompanhamento, whatsapp
 from bot.fila import FUSO_BRASILIA, Post, ler_fila, pendentes
 from bot.instagram import ErroInstagram, Instagram
 
 RAIZ = Path(__file__).resolve().parent.parent
 FILA = RAIZ / "fila"
 PUBLICADOS = RAIZ / "publicados"
+REGISTRO = RAIZ / "dados" / "acompanhamento.json"
 
 
 def url_publica(arquivo: Path) -> str:
@@ -145,6 +146,12 @@ def main() -> int:
         try:
             post_id = publicar(ig, post)
             arquivar(post)
+            # Entra no acompanhamento a partir de agora, nao do horario
+            # agendado: os marcos contam da publicacao real.
+            acompanhamento.incluir(
+                REGISTRO, post_id, post.chave, post.tipo,
+                datetime.now(FUSO_BRASILIA),
+            )
             ok.append(descrever(post))
             print(f"[ok] {descrever(post)} -> {post_id}")
         except (ErroInstagram, OSError) as e:
@@ -155,7 +162,11 @@ def main() -> int:
 
     partes = []
     if ok:
-        partes.append("Publicado no Instagram da Caya:\n" + "\n".join(f"- {o}" for o in ok))
+        partes.append(
+            "Publicado no Instagram da Caya:\n"
+            + "\n".join(f"- {o}" for o in ok)
+            + "\n\nO acompanhamento comeca em 1h."
+        )
     if falhas:
         partes.append("FALHOU (segue na fila, tenta de novo):\n" + "\n".join(f"- {f}" for f in falhas))
     if partes:
