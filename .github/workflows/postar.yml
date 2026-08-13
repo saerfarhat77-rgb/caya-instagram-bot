@@ -1,0 +1,61 @@
+name: Postar no Instagram
+
+# De hora em hora. O horario do cron e UTC; o robo compara o agendamento em
+# horario de Brasilia, entao rodar sempre no minuto 5 cobre qualquer fuso.
+on:
+  schedule:
+    - cron: "5 * * * *"
+  workflow_dispatch:
+    inputs:
+      simular:
+        description: "So mostrar o que seria publicado, sem publicar"
+        type: boolean
+        default: false
+
+# Precisa escrever no repo para mover os arquivos de fila/ para publicados/.
+permissions:
+  contents: write
+
+concurrency:
+  group: postar-instagram
+  cancel-in-progress: false
+
+jobs:
+  postar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Publicar o que venceu
+        env:
+          IG_CONTA_ID: ${{ secrets.IG_CONTA_ID }}
+          IG_TOKEN: ${{ secrets.IG_TOKEN }}
+          BASE_URL: ${{ vars.BASE_URL }}
+          WHATSAPP_PHONE_ID: ${{ secrets.WHATSAPP_PHONE_ID }}
+          WHATSAPP_TOKEN: ${{ secrets.WHATSAPP_TOKEN }}
+          WHATSAPP_DESTINO: ${{ secrets.WHATSAPP_DESTINO }}
+          CALLMEBOT_PHONE: ${{ secrets.CALLMEBOT_PHONE }}
+          CALLMEBOT_APIKEY: ${{ secrets.CALLMEBOT_APIKEY }}
+        run: |
+          if [ "${{ inputs.simular }}" = "true" ]; then
+            python -m bot.postar --simular
+          else
+            python -m bot.postar
+          fi
+
+      - name: Arquivar os posts publicados
+        if: ${{ always() && inputs.simular != true }}
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git config user.name "robo-caya"
+            git config user.email "actions@github.com"
+            git add -A fila publicados
+            git commit -m "Arquiva posts publicados em $(date -u +%Y-%m-%d\ %H:%M) UTC"
+            git push
+          else
+            echo "Nada mudou na fila."
+          fi
