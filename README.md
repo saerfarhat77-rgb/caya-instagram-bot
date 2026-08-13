@@ -69,22 +69,34 @@ https://graph.facebook.com/v21.0/oauth/access_token
 O token de 60 dias e o **IG_TOKEN**. Anote a data de validade — quando vencer,
 o robo avisa no WhatsApp e basta repetir este passo 6.
 
-### 2. WhatsApp: escolha um dos dois
+### 2. Alerta de falha (opcional)
 
-**Opcao A — CallMeBot (2 minutos, gratis):**
-1. Salve o numero `+34 644 51 95 23` nos contatos.
-2. Mande `I allow callmebot to send me messages` para ele.
-3. Ele responde com sua apikey.
-4. Secrets: `CALLMEBOT_PHONE` (seu numero com codigo do pais, ex `5511999998888`)
-   e `CALLMEBOT_APIKEY`.
+**Por padrao ja funciona por e-mail:** o GitHub avisa em saer.farhat77@gmail.com
+quando uma execucao falha, sem configurar nada. Confira nas
+[configuracoes de notificacao](https://github.com/settings/notifications),
+secao **Actions**.
 
-**Opcao B — WhatsApp Cloud API (oficial da Meta, mesmo app do Instagram):**
+Se quiser no WhatsApp, ha dois caminhos. O robo usa o que estiver configurado;
+se os dois estiverem, a Cloud API tem prioridade.
+
+**Opcao A — WhatsApp Cloud API (oficial, mesmo app do Instagram):**
+
 1. No app da Meta, adicione o produto **WhatsApp**.
 2. Copie o **Phone number ID** e o token.
 3. Secrets: `WHATSAPP_PHONE_ID`, `WHATSAPP_TOKEN` e `WHATSAPP_DESTINO`
    (seu numero com codigo do pais).
 
-Se as duas estiverem configuradas, a oficial tem prioridade.
+Recomendada: ja que o token do Instagram vem do mesmo app, sai tudo de uma vez.
+
+**Opcao B — CallMeBot (servico de terceiro, gratis):**
+1. Salve o numero `+34 644 51 95 23` nos contatos.
+2. Mande exatamente `I allow callmebot to send me messages` (em ingles).
+3. Ele responde com sua apikey.
+4. Secrets: `CALLMEBOT_PHONE` (numero com codigo do pais, ex `5511999998888`)
+   e `CALLMEBOT_APIKEY`.
+
+E um servico mantido por uma pessoa so e as vezes fica fora do ar ou nao
+responde. Se isso acontecer, use o e-mail ou a opcao A.
 
 ### 3. GitHub
 
